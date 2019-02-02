@@ -2,7 +2,7 @@
 一个使用Python flask在移动教务APP的基础上二次开发的API集合，正常运行依赖学校服务器的稳定
 ****
 
-### feature:
+### feature
 * 使用更加简洁方便的json替换XML传输数据
 * 修改了原API中不易理解的使用拼音的键名，如djz（第几周），skjs（上课教室）等
 * 采用RESTful风格的API设计
