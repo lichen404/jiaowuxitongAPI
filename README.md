@@ -8,12 +8,7 @@
 * 采用RESTful风格的API设计
 
 ### Usage
-请求示例：
-	http://apis.stayw1thme.xyz/v1/GET/stu_score/学号
-请求方式：
-	get
-返回格式：
-	json
+请求示例：http://apis.stayw1thme.xyz/v1/GET/stu_score/学号  请求方式：get  返回格式：json
 
 stu_score为可替换项，返回结果为该学号学生所有课程成绩。可替换为如下参数：
 
