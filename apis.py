@@ -13,7 +13,7 @@ header = {
     'User-Agent': 'KSOAP/2.0',
     'HOST': '123.15.36.138:8008',
     'Content-Type': 'text/xml',
-    # 'SOAPAction': 'http://service.jw.com/ScoreSearch'
+   
 }
 
 
