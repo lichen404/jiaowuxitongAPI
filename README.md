@@ -46,4 +46,4 @@ stu_score为可替换项，返回结果为该学号学生所有课程成绩。�
 
 ```
 ### Demo
-四六级成绩查询：[https://dl.stayw1thme.xyz/demo.html](https://dl.stayw1thme.xyz/demo.html)
+四六级成绩查询：[http://dl.stayw1thme.xyz/demo.html](https://dl.stayw1thme.xyz/demo.html)
