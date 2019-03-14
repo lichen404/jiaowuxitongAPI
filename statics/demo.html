@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="fetch CET-4 CET-6 grade score">
+	<title>四六级考试成绩查询</title>
+	<link rel="stylesheet" href="https://cdn.bootcss.com/twitter-bootstrap/3.3.7/css/bootstrap.css">
+	<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcss.com/vue/2.0.1/vue.js"></script>
+	<script src="https://cdn.bootcss.com/vue-resource/1.5.1/vue-resource.min.js"></script>
+<script>
+function showError(resp){
+	resp.json().then(function(result){
+		console.log('Error:'+result.result);
+	});
+}
+$(function(){
+	var vm=new Vue({
+		el:'#vm',
+		http:{
+			timeout:5000
+		},
+		data:{
+			title:'grade_score_list',
+			score_list:[],
+			loading:false,
+			api_url: 'http://apis.stayw1thme.xyz/v1/GET/stu_grade_score/'
+		},
+		created:function(){
+			this.init();
+		},
+		methods:{
+			init:function(){
+				var that=this;
+				that.loading=true;
+			},
+			query:function(id){
+				var that=this;
+				that.$resource(this.api_url+id).get().then(function(resp){
+					that.loading=false;
+					resp.json().then(function(result){
+						that.score_list=result.result;
+						that.score_list.pop();
+						//console.log(that.score_list);
+					});
+
+
+
+				},function(resp){
+					that.loading=false;
+					showError(resp);
+				});
+			}
+
+		}
+
+	});
+window.vm=vm;
+
+var vmquery=new Vue({
+	el:'#vmquery',
+	data:{
+		id:''
+	},
+	methods:{
+		query:function(){
+			vm.query(this.$data.id);
+			this.id='';
+		}
+	}
+});
+})
+
+
+
+
+/*   跨域问题无法解决
+$(function(){
+	var web_server_url='http://123.15.36.138:8008/zfmobile_port/webservice/jw/EducationalPortXMLService';
+	var jqxhr=$.ajax(web_server_url,{
+		dataType:'xml'
+	}).done(function(){
+		console.log('移动教务服务器可以访问');
+	}).fail(function(xhr,status){
+		ajaxLog('访问学校服务器失败:'+xhr.status+',原因'+status);
+		alert('学校服务器无法访问，API服务不能正常使用！')
+	});
+
+});
+*/
+</script>
+</head>
+<body>
+	<nav class="navbar navbar-static-top">
+		<div class="container-fluid">
+			<div class ="navbar-header">
+				  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+		          <span class="icon-bar"></span>
+		          <span class="icon-bar"></span>
+		          <span class="icon-bar"></span>
+                  </button>
+				<a href="#" class="navbar-brand">四六级成绩查询Demo</a>
+			</div>
+	        <div class="bs-example-navbar-collapse" id="bs-navbar">
+	    	<ul class="nav navbar-nav">
+	    		<li><a target="_blank" href="http://bbcjzm.neea.edu.cn/">四六级成绩单补办</a></li>
+	    		<li><a target="_blank" href="https://github.com/lichen404/jiaowuxitongAPI">API项目地址</a></li>
+	    	</ul>
+	        </div>
+	    </div>
+    </nav>
+    
+    <div id="important" style="color:#8b9498;background-color:#286090; padding: 30px 0; margin:-20px 0 20px 0; ">
+    	<div class="container">
+    		<h1 style="color: #fff;font-size: 50px">英语四六级成绩查询</h1>
+    		<p style="font-size: 24px;line-height: 48px">数据来源于学校移动教务系统，可能会有延迟或者无法使用的情况</p>
+    	</div>
+    </div>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title"><span class="glyphicon glyphicon-plus"></span> 查询</h3>
+					</div>
+					<div class="panel-body">
+						<form id="vmquery" action="#0" v-on:submit.prevent="query">
+							<div class="form-group">
+								<label>学号:</label>
+								<input type="text" v-model="id" class="form-control" placeholder="Enter your ID">
+							</div>
+						    <button type="submit" class="btn btn-deafult" style="float: right">查询</button>
+						</form>
+					</div>
+				</div>
+			</div>
+			   <div class="col-md-6">
+			   	<div class="panel panel-default">
+			   		<div class="panel-heading">
+			   			<h3 class="panel-title"><span class="glyphicon glyphicon-th-list"></span>
+			   		     历次成绩</h3>
+			   		</div>
+			   		<div class="panel-body">
+			   			<div id="vm">
+			   				
+			   				<p v-if="loading">Loading...</p>
+			   				<ul>
+			   					<li v-for="t in score_list">
+			   						<dl>
+			   							<dt>日期：{{t.time}} {{t.name}}</dt>
+			   							<dd>分数： {{t.score}}</dd>
+			   						</dl>
+			   					</li>
+			   				</ul>
+
+
+			   			</div>
+			   	   </div>
+
+				
+			    </div>
+		       </div>
+
+        </div>
+    </div>
+ <footer style="background-color:#ddd; padding: 20px 0;">
+        <div class="container">
+            <p>
+                <a target="_blank" href="https://www.stayw1thme.com">Blog</a> -
+                <a target="_blank" href="https://github.com/lichen404">GitHub</a> 
+              
+            </p>
+            <p>这个Demo不会存储你的数据，请不要将本API服务用于非法用途.</p>
+            <p>Coding by   <a target="_blank" href="https://github.com/lichen404">lichen404.</a></p>
+        </div>
+    </footer>
+
+</body>
+</html>
