@@ -1,10 +1,13 @@
 import hashlib
 import requests
 import html
-import json
-from urllib import parse
 import lxml.html
+import logging
+from urllib import parse
+from flask import jsonify
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s  - %(message)s')
+logger = logging.getLogger(__name__)
 url = 'http://123.15.36.138:8008/zfmobile_port/webservice/jw/EducationalPortXMLService'
 header = {
     'User-Agent': 'KSOAP/2.0',
@@ -57,10 +60,12 @@ def getStuGradeScore(stuID, header):
     try:
         urlhd = requests.post(url, headers=header, data=data.encode('utf-8'))
 
-    except:
+    except Exception as e:
+        logger.info(e)
+
         resp = jsonResponse('404', 'Failed', ['学校服务器当前可能无法访问'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
+        resp = class2dict(resp)
+        return jsonify(resp)
     page = urlhd.text
     page = html.unescape(page)
     tree = lxml.html.etree.HTML(page)
@@ -82,13 +87,12 @@ def getStuGradeScore(stuID, header):
             d = dict(name=z, time=y, score=x)
             dictList.append(d)
         resp = jsonResponse('200', 'Success', dictList)
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
+        resp = class2dict(resp)
+        return jsonify(resp)
     else:
         resp = jsonResponse('404', 'failed', ['请检查输入内容是否正确'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
-
+        resp = class2dict(resp)
+        return jsonify(resp)
 
 
 def getStuScore(stuID, header):
@@ -96,17 +100,18 @@ def getStuScore(stuID, header):
     data = data.format(id=stuID, key=getStuPhotoKey(stuID))
     try:
         urlhd = requests.post(url, headers=header, data=data.encode('utf-8'))
-    except:
+    except Exception as e:
+        logger.info(e)
         resp = jsonResponse('404', 'Failed', ['学校服务器当前可能无法访问'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
+        resp = class2dict(resp)
+        return jsonify(resp)
     page = urlhd.text
     page = html.unescape(page)
     tree = lxml.html.etree.HTML(page)
-    courseNodeList = tree.xpath("//kcmc") # 课程名称
+    courseNodeList = tree.xpath("//kcmc")  # 课程名称
     scoreNodeList = tree.xpath("//zscj")  # 课程总成绩
     if scoreNodeList:
-        print(scoreNodeList)
+        # print(scoreNodeList)
         courseList = []
         scoreList = []
         for x in courseNodeList:
@@ -119,13 +124,12 @@ def getStuScore(stuID, header):
             d = dict(course=x, score=y)
             dictList.append(d)
         resp = jsonResponse('200', 'Success', dictList)
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
+        resp = class2dict(resp)
+        return jsonify(resp)
     else:
-        resp=jsonResponse('404','failed',['请检查输入内容是否正确'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
-
+        resp = jsonResponse('404', 'failed', ['请检查输入内容是否正确'])
+        resp = class2dict(resp)
+        return jsonify(resp)
 
 
 def getStuInfo(stuID, header):
@@ -133,10 +137,11 @@ def getStuInfo(stuID, header):
     data = data.format(id=stuID, key=getStuInfoKey(stuID))
     try:
         urlhd = requests.post(url, headers=header, data=data.encode('utf-8'))
-    except:
+    except Exception as e:
+        logger.info(e)
         resp = jsonResponse('404', 'Failed', ['学校服务器当前可能无法访问'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
+        resp = class2dict(resp)
+        return jsonify(resp)
     page = urlhd.text
     page = html.unescape(page)
     tree = lxml.html.etree.HTML(page)
@@ -150,10 +155,10 @@ def getStuInfo(stuID, header):
         valueList.append(x.text)
     dictList = dict(zip(keyList, valueList))
     resp = jsonResponse('200', 'Success', dictList)
-    resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
+    resp = class2dict(resp)
     # print(resp)
 
-    return resp
+    return jsonify(resp)
 
 
 def parseSchdeule(schedule):
@@ -177,26 +182,27 @@ def getStuCourseSchedule(stuID, schoolYear, term, header):
     data = data.format(id=stuID, year=schoolYear, term=term, key=getStuCourseScheduleKey(stuID, schoolYear, term))
     try:
         urlhd = requests.post(url, headers=header, data=data.encode('utf-8'))
-    except:
+    except Exception as e:
+        logger.info(e)
         resp = jsonResponse('404', 'Failed', ['学校服务器当前可能无法访问'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
+        resp = class2dict(resp)
         return resp
     page = urlhd.content.decode("utf8")
     page = html.unescape(page)
-    #print(page)
+    # print(page)
     tree = lxml.html.etree.HTML(page)
     courseNameList = []
     dayList = []
     weekList = []
     creditList = []
     classTimeList = []
-    classroomList=[]
+    classroomList = []
     currentWeek = tree.xpath("//dqz")  # 当前周
     # print(currentWeek[0].text)
-    if(currentWeek):
+    if (currentWeek):
         timeNow = {'currentCourseWeek': currentWeek[0].text}
     else:
-        timeNow={'currentCourseWeek':None}
+        timeNow = {'currentCourseWeek': None}
     courseNameNodeList = tree.xpath("//kcmc")  # 课程名称
 
     for x in courseNameNodeList:
@@ -218,7 +224,6 @@ def getStuCourseSchedule(stuID, schoolYear, term, header):
     for x in classroom:
         classroomList.append(x.text)  # 上课教室
 
-
     classTime = tree.xpath("//js")  # 第几节上课
     for x in classTime:
         classTimeList.append(x.text)
@@ -233,9 +238,9 @@ def getStuCourseSchedule(stuID, schoolYear, term, header):
     # test  print(dictList[0]['schedule']['teacher'])
     resp = jsonResponse('200', 'Success', dictList)
 
-    resp = json.dumps(resp, default=class2dict,ensure_ascii=False)
-    print(resp)
-    return resp
+    resp = class2dict(resp)
+    # print(resp)
+    return jsonify(resp)
 
 
 def getStuPhoto(stuID, header):
@@ -243,10 +248,12 @@ def getStuPhoto(stuID, header):
     data = data.format(id=stuID, key=getStuPhotoKey(stuID))
     try:
         Rawcontent = requests.post(url, data=data.encode('utf8'), headers=header)
-    except:
+
+    except Exception as e:
+        logger.info(e)
         resp = jsonResponse('404', 'Failed', ['学校服务器当前可能无法访问'])
-        resp = json.dumps(resp, default=class2dict, ensure_ascii=False)
-        return resp
+        resp = class2dict(resp)
+        return jsonify(resp)
 
     content = Rawcontent.text
     tree = lxml.html.etree.HTML(content)
@@ -258,8 +265,8 @@ def getStuPhoto(stuID, header):
     else:
         pass
 
-    resp = json.dumps(resp, default=class2dict)
-    #print(json.loads(resp))
-    return resp
+    resp = class2dict(resp)
+    # print(json.loads(resp))
+    return jsonify(resp)
 
-#getStuCourseSchedule('201516010307','2017-2018','1',header)
+# getStuCourseSchedule('201516010307','2017-2018','1',header)
