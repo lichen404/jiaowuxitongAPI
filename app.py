@@ -28,13 +28,15 @@ def courseSchedule(ID):
     year = request.args.get('year')
     term = request.args.get('term')
     if year and term:
-        schoolYear = str(year) + '-' + str(int(year) + 1)
+        schoolYear = year
+        # schoolYear = str(year) + '-' + str(int(year) + 1)
         resp = apis.getStuCourseSchedule(ID, schoolYear=schoolYear, term=term, header=apis.header)
         return resp
     else:
         resp = apis.jsonResponse('404', 'failed', ['请检查输入内容是否正确'])
-        resp = apis.json.dumps(resp, default=apis.class2dict, ensure_ascii=False)
-        return resp
+        resp = apis.class2dict(resp)
+        # print(resp)
+        return apis.jsonify(resp)
 
 
 @app.route('/v1/GET/stu_photo/<ID>', methods=['GET', 'POST'])
@@ -46,6 +48,15 @@ def stuPhoto(ID):
 @app.route('/v1/GET/stu_info/<ID>', methods=['GET', 'POST'])
 def stuInfo(ID):
     resp = apis.getStuInfo(ID, apis.header)
+    return resp
+
+
+@app.route('/v1/POST/stu_login_status', methods=['POST'])
+def stuLoginStatus():
+    print(request.form)
+    stuID = request.form['stuID']
+    stuPwd = request.form['stuPwd']
+    resp = apis.getLoginState(stuID, stuPwd, apis.header)
     return resp
 
 

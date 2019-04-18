@@ -13,7 +13,7 @@ header = {
     'User-Agent': 'KSOAP/2.0',
     'HOST': '123.15.36.138:8008',
     'Content-Type': 'text/xml',
-   
+    # 'SOAPAction': 'http://service.jw.com/ScoreSearch'
 }
 
 
@@ -47,6 +47,14 @@ def getStuInfoKey(stuID):
     return getStuPhotoKey(stuID)
 
 
+def getStuScoreKey(stuID):
+    return getStuPhotoKey(stuID)
+
+
+def getStuGradeScoreKey(stuID):
+    return getStuPhotoKey(stuID)
+
+
 def getStuCourseScheduleKey(stuID, year, term):
     RawKey = hashlib.md5((parse.quote(
         stuID + '&' + year + '&' + term + 'DAFF8EA19E6BAC86E040007F01004EA').encode('utf8')))
@@ -56,7 +64,7 @@ def getStuCourseScheduleKey(stuID, year, term):
 
 def getStuGradeScore(stuID, header):
     data = '<v:Envelope xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns:d="http://www.w3.org/2001/XMLSchema" xmlns:c="http://schemas.xmlsoap.org/soap/encoding/" xmlns:v="http://schemas.xmlsoap.org/soap/envelope/"><v:Header /><v:Body><n0:GradeScoreInfoSearch id="o0" c:root="1" xmlns:n0="http://service.jw.com/"><sid i:type="d:string">{id}</sid><count i:type="d:string">0</count><strKey i:type="d:string">{key}</strKey></n0:GradeScoreInfoSearch></v:Body></v:Envelope>'
-    data = data.format(id=stuID, key=getStuPhotoKey(stuID))
+    data = data.format(id=stuID, key=getStuGradeScoreKey(stuID))
     try:
         urlhd = requests.post(url, headers=header, data=data.encode('utf-8'))
 
@@ -97,7 +105,7 @@ def getStuGradeScore(stuID, header):
 
 def getStuScore(stuID, header):
     data = '<v:Envelope xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns:d="http://www.w3.org/2001/XMLSchema" xmlns:c="http://schemas.xmlsoap.org/soap/encoding/" xmlns:v="http://schemas.xmlsoap.org/soap/envelope/"><v:Header /><v:Body><n0:ScoreSearch id="o0" c:root="1" xmlns:n0="http://service.jw.com/"><sid i:type="d:string">{id}</sid><count i:type="d:string">0</count><strKey i:type="d:string">{key}</strKey></n0:ScoreSearch></v:Body></v:Envelope>'
-    data = data.format(id=stuID, key=getStuPhotoKey(stuID))
+    data = data.format(id=stuID, key=getStuScoreKey(stuID))
     try:
         urlhd = requests.post(url, headers=header, data=data.encode('utf-8'))
     except Exception as e:
@@ -106,22 +114,28 @@ def getStuScore(stuID, header):
         resp = class2dict(resp)
         return jsonify(resp)
     page = urlhd.text
+    print(page)
     page = html.unescape(page)
     tree = lxml.html.etree.HTML(page)
     courseNodeList = tree.xpath("//kcmc")  # 课程名称
     scoreNodeList = tree.xpath("//zscj")  # 课程总成绩
+    creditNodeList = tree.xpath("//xf")  # 学分
+
     if scoreNodeList:
         # print(scoreNodeList)
         courseList = []
         scoreList = []
+        creditList = []
         for x in courseNodeList:
             courseList.append(x.text)
         for x in scoreNodeList:
             scoreList.append(x.text)
-            tempList = zip(courseList, scoreList)
+        for x in creditNodeList:
+            creditList.append(x.text)
+            tempList = zip(courseList, scoreList, creditList)
         dictList = []
-        for x, y in tempList:
-            d = dict(course=x, score=y)
+        for x, y, z in tempList:
+            d = dict(course=x, score=y, credit=z)
             dictList.append(d)
         resp = jsonResponse('200', 'Success', dictList)
         resp = class2dict(resp)
@@ -161,7 +175,7 @@ def getStuInfo(stuID, header):
     return jsonify(resp)
 
 
-def parseSchdeule(schedule):
+'''def parseSchdeule(schedule):
     scheduleList = []
     for x in schedule:
         scheduleList.append(x.tail.strip())
@@ -175,6 +189,7 @@ def parseSchdeule(schedule):
         dictList.append(d)
     # print(dictList)
     return dictList
+'''
 
 
 def getStuCourseSchedule(stuID, schoolYear, term, header):
@@ -262,11 +277,54 @@ def getStuPhoto(stuID, header):
         strBase64Photo = element[0].text
         result = {'base64img': strBase64Photo}
         resp = jsonResponse('200', 'Success', result)
+        resp = class2dict(resp)
+        # print(json.loads(resp))
+        return jsonify(resp)
     else:
-        pass
+        resp = jsonResponse('404', 'Failed', ['请检查输入内容是否正确'])
+        resp = class2dict(resp)
+        return jsonify(resp)
 
+    resp = jsonResponse('404', 'Failed', ['请检查输入内容是否正确'])
     resp = class2dict(resp)
-    # print(json.loads(resp))
     return jsonify(resp)
 
+
+def getStuLoginKey(stuID, stuPwd):
+    RawKey = hashlib.md5((parse.quote(
+        stuID + '&' + stuPwd.upper() + '&' + 'YDAFF8EA19E6BAC86E040007F01004EA').encode('utf8')))
+    Key = (RawKey.hexdigest()).upper()
+    # print(Key)
+    return Key
+
+
+def getLoginState(stuID, stuPwd, header):
+    id = stuID
+    pwd = stuPwd
+    key = getStuLoginKey(id, pwd)
+    data = '<v:Envelope xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns:d="http://www.w3.org/2001/XMLSchema" xmlns:c="http://schemas.xmlsoap.org/soap/encoding/" xmlns:v="http://schemas.xmlsoap.org/soap/envelope/"><v:Header /><v:Body><n0:Login id="o0" c:root="1" xmlns:n0="http://service.jw.com/"><userName i:type="d:string">{0}</userName><passWord i:type="d:string">{1}</passWord><role i:type="d:string">XS</role><alone i:type="d:string">Y</alone><strKey i:type="d:string">{2}</strKey></n0:Login></v:Body></v:Envelope>'
+    data = data.format(id, pwd, key)
+    try:
+        Rawcontent = requests.post(url, data=data.encode('utf8'), headers=header)
+        page = Rawcontent.text
+        page = html.unescape(page)
+        tree = lxml.html.etree.HTML(page)
+        element = tree.xpath('//xy')
+        print(element)
+        # print(element[0].text) # 通过判断返回结果中是否能匹配到学院名称来判断是否登录成功
+        if (element):
+            result = {'response': 'login ok'}
+            resp = jsonResponse('200', 'Success', result)
+        else:
+            result = {'response': 'login failed,please check your input'}
+            resp = jsonResponse('', 'Failed', result)
+        resp = class2dict(resp)
+        return jsonify(resp)
+    except Exception as e:
+        logger.info(e)
+        resp = jsonResponse('404', 'Failed', ['学校服务器当前可能无法访问'])
+        resp = class2dict(resp)
+        return jsonify(resp)
+
+# getLoginState('201516010307', '123kingstone')
 # getStuCourseSchedule('201516010307','2017-2018','1',header)
