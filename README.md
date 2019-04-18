@@ -27,8 +27,12 @@ stu_score为可替换项，返回结果为该学号学生所有课程成绩。�
 
 stu_login_status的请求URL为http://apis.stayw1thme.xyz/v1/POST/stu_login_status, POST参数stuID为学号,stuPwd为密码.
 
+## example
+![请求示例](https://www.stayw1thme.xyz/usr/uploads/2019/04/4031481224.png)
 
-	JSON返回示例：
+
+
+	 课表请求JSON返回示例：
 ```javascript
 {"code": "200",
  "reason": "Success", 
