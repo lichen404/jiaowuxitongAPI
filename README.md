@@ -62,3 +62,4 @@ stu_login_status的请求URL为http://apis.stayw1thme.xyz/v1/POST/stu_login_stat
 * get_stu_score 返回结果增加学生学分
 * 错误统一处理,完善输出日志
 * 返回JSON 需要重写,返回信息code,reason内容不明确
+* 需要做一个判断学校服务器是否可以访问的接口
